@@ -9,21 +9,12 @@ def extractedbits(no,k,pos):
     s=bi[31-pos-k:31-pos]
     return int(s,2)
 
-def inTLB(pagenum,TLB):
-    for i in range(16):
-
-        if TLB[i][0]==pagenum:
-            return True
-    return False
-def readFromDisk(pagenum,openFrame,physicalMem):
-    
-        openFrame+=1
-        return openFrame-1
 
 def main():
     PAGE_SIZE = 256
     adds=[]
     TLB=[]
+    ptable=[]
     physicalMem=[None]*PHYS_MEM_SIZE
     tlbIndex=0
     rows, cols=16,2
@@ -37,7 +28,7 @@ def main():
         for j in range(cols):
             col.append(-1)
         TLB.append(col)
-    ptable=[]
+    
     for i in range(256):
         ptable.append(-1)
 
@@ -66,20 +57,19 @@ def main():
                     file.seek(pagenum*256)
                     b=file.read(256)
                     physicalMem[openFrame]=b.hex()
-                    # print(physicalMem)
                     openFrame+=1
                 ptable[pagenum] = openFrame-1
                 totalfaults+=1
             framenumber=ptable[pagenum]
             TLB[tlbIndex][0]=pagenum
-            TLB[tlbIndex][1]=ptable[pagenum]
+            TLB[tlbIndex][1]=framenumber
             tlbIndex=(tlbIndex+1)%rows
         index=(framenumber)
-        bs = physicalMem[index]
-        value=bs[offset*2:(offset*2)+2]
+        hexa = physicalMem[index]
+        value=hexa[offset*2:(offset*2)+2]
         x=int(value,16)
         
-        print(i,value,x,index,bs,'\n')
+        print(i,offset,value,x,index,hexa,'\n')
 
 
 

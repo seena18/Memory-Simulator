@@ -41,14 +41,14 @@ def opt(physicalMem,b,rows,ptable,pagenum,TLB,optmap,optstack):
     except:   
         
         for i in range(len(optstack)):
-            print(optmap[optstack[i]])
-            if len(optstack[i]) ==0:
+            print(optstack)
+            if len(optmap[optstack[i]]) ==0:
                 m=optstack[i]
                 break
             if(optmap[optstack[i]][0]>m):
                 m=optstack[i]
 
-        index=physicalMem.index(ptable[m])
+        index=ptable[m]
         optstack.remove(m)
 #17 1 54 
     
@@ -128,14 +128,17 @@ def main():
         
     with open('./Program_3/one.txt') as addresses:
         for idx,line in enumerate(addresses):
+            x = int(line)
             adds.append(int(line))
-            if int(line)%256 in optmap.keys():
-                optmap[int(line)%256].append(idx)
+            print(x%256)
+            if extractedbits(x,8,8) in optmap.keys():
+                optmap[extractedbits(x,8,8)].append(idx)
             else:
-                optmap[int(line)%256]=[]
+                optmap[extractedbits(x,8,8)]=[]
     for i in adds:
-        print(optmap[i%256])
-        optmap[i%256].pop(0)
+        print(optmap.keys())
+        if len(optmap[extractedbits(x,8,8)])!=0:
+            optmap[extractedbits(x,8,8)].pop(0)
         pagenum=extractedbits(i,8,8)
         offset=extractedbits(i,8,0)
         framenumber=None

@@ -16,21 +16,51 @@ def fifo(physicalMem,b,openFrame,rows,ptable,pagenum,TLB):
     openFrame[0]=(openFrame[0]+1)%PHYS_MEM_SIZE
 
 # least recently used
-def lru(physicalMem,b,openFrame,rows,ptable,pagenum,TLB,stack):
+def lru(physicalMem,b,rows,ptable,pagenum,TLB,stack):
     index=0
     try:
         index=physicalMem.index(None)
     except:   
         index=stack.data
+    
+    print("LRUFrame",index)
+    physicalMem[index]=b.hex()
+    
+    for i in range(16):
+        if(TLB[i][1]==index):
+            TLB[i][0]=pagenum
+    ptable[pagenum]=index
+    for i in range(len(ptable)):
+        if(ptable[i]==index and i!=pagenum):
+            ptable[i]=-1
+def opt(physicalMem,b,rows,ptable,pagenum,TLB,optmap,optstack):
+    index=0
+    m=-1
+    try:
+        index=physicalMem.index(None)
+    except:   
+        
+        for i in range(len(optstack)):
+            print(optmap[optstack[i]])
+            if len(optstack[i]) ==0:
+                m=optstack[i]
+                break
+            if(optmap[optstack[i]][0]>m):
+                m=optstack[i]
+
+        index=physicalMem.index(ptable[m])
+        optstack.remove(m)
+#17 1 54 
+    
+    optstack.append(pagenum)  
     physicalMem[index]=b.hex()
     for i in range(16):
-        if(TLB[i][1]==openFrame[0]):
+        if(TLB[i][1]==index):
             TLB[i][0]=pagenum
-    ptable[pagenum]=openFrame[0]
+    ptable[pagenum]=index
     for i in range(len(ptable)):
-        if(ptable[i]==openFrame[0] and i!=pagenum):
+        if(ptable[i]==index and i!=pagenum):
             ptable[i]=-1
-  
 
 
 def extractedbits(no,k,pos): 
@@ -57,7 +87,7 @@ def findNode(head, data):
 def printLRU(head):
     node = head
     while(node != None):
-        print(node.data + "\n")
+        print(node.data,"\n")
         node = node.next
 
 
@@ -73,6 +103,8 @@ def main():
     PAGE_SIZE = 256
     lruhead= None
     lrutail= None
+    optmap={}
+    optstack=[]
     adds=[]
     TLB=[]
     ptable=[]
@@ -95,9 +127,15 @@ def main():
 
         
     with open('./Program_3/one.txt') as addresses:
-        for line in addresses:
+        for idx,line in enumerate(addresses):
             adds.append(int(line))
+            if int(line)%256 in optmap.keys():
+                optmap[int(line)%256].append(idx)
+            else:
+                optmap[int(line)%256]=[]
     for i in adds:
+        print(optmap[i%256])
+        optmap[i%256].pop(0)
         pagenum=extractedbits(i,8,8)
         offset=extractedbits(i,8,0)
         framenumber=None
@@ -118,19 +156,20 @@ def main():
                 with open("./Program_3/BACKING_STORE.bin", mode='rb') as file:
                     file.seek(pagenum*256)
                     b=file.read(256)
-                    lru(physicalMem,b,openFrame,rows,ptable,pagenum,TLB,lruhead)
+                    # lru(physicalMem,b,rows,ptable,pagenum,TLB,lrutail)
+                    opt(physicalMem,b,rows,ptable,pagenum,TLB,optmap,optstack)
                     print("PAGEFAULT")
-                ptable[pagenum]
                 totalfaults+=1
             framenumber=ptable[pagenum]
-            print(framenumber)
             TLB[tlbIndex][0]=pagenum
             TLB[tlbIndex][1]=framenumber
             tlbIndex=(tlbIndex+1)%rows
         index=(framenumber)
         hexa = physicalMem[index]
-        n= findNode(lruhead,index)
+        n = findNode(lruhead,index)
+        print(index,n)
         if(n):
+            print(n.data)
             # if node at beginning of list, do nothing
             if(lruhead.data!=n.data):
                 # middle of list
@@ -166,7 +205,7 @@ def main():
                 nod.next=lruhead
                 lruhead.prev=nod
                 lruhead=nod
-            
+        printLRU(lruhead)
         value=hexa[offset*2:(offset*2)+2]
         bits = bin(int(value, 16))[2:].zfill(8)
 

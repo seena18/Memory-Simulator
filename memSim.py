@@ -117,6 +117,9 @@ def main():
 
     args = parser.parse_args()
 
+    if args.frame_no < 1:
+        exit("# of frames must be a non-zero positive integer.")
+
     phys_mem_size = args.frame_no
     physicalMem=[None]*phys_mem_size
 

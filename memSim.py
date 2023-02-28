@@ -121,7 +121,7 @@ def main():
     physicalMem=[None]*phys_mem_size
 
     file_path = args.ref_seq_file
-    pra = args.pra
+    pra = args.pra.lower()
 
     if pra == 'lru':
         lruhead= None
@@ -139,7 +139,6 @@ def main():
     for i in range(256):
         ptable.append(-1)
 
-        #'./Program_3/one.txt'
     with open(file_path) as addresses:
         for idx,line in enumerate(addresses):
             x = int(line)
@@ -167,21 +166,20 @@ def main():
                 break
 
 
-    
-
         if(not hit):
             if(ptable[pagenum]==-1):
                 with open("./BACKING_STORE.bin", mode='rb') as file:
                     file.seek(pagenum*256)
                     b=file.read(256)
 
-                    match pra:
-                        case 'fifo':
-                            fifo(physicalMem,phys_mem_size,b,openFrame,ptable,pagenum,TLB)
-                        case 'lru':
-                            lru(physicalMem,b,ptable,pagenum,TLB,lrutail)
-                        case 'opt':
-                            opt(physicalMem,b,ptable,pagenum,TLB,optmap,optstack)
+                    if pra == 'fifo':
+                        fifo(physicalMem,phys_mem_size,b,openFrame,ptable,pagenum,TLB)
+                    elif pra == 'lru':
+                        lru(physicalMem,b,ptable,pagenum,TLB,lrutail)
+                    elif pra == 'opt':
+                        opt(physicalMem,b,ptable,pagenum,TLB,optmap,optstack)
+                    else:
+                        exit("incorrect pra algorithm argument.")
                     
                 totalfaults+=1
             framenumber=ptable[pagenum]

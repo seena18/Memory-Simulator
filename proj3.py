@@ -23,7 +23,6 @@ def lru(physicalMem,b,rows,ptable,pagenum,TLB,stack):
     except:   
         index=stack.data
     
-    print("LRUFrame",index)
     physicalMem[index]=b.hex()
     
     for i in range(16):
@@ -35,17 +34,16 @@ def lru(physicalMem,b,rows,ptable,pagenum,TLB,stack):
             ptable[i]=-1
 def opt(physicalMem,b,rows,ptable,pagenum,TLB,optmap,optstack):
     index=0
-    m=-1
+    
     try:
         index=physicalMem.index(None)
     except:   
-        
+        m=optstack[0]
         for i in range(len(optstack)):
-            print(optstack)
             if len(optmap[optstack[i]]) ==0:
                 m=optstack[i]
                 break
-            if(optmap[optstack[i]][0]>m):
+            if(optmap[optstack[i]][0]>=optmap[m][0]):
                 m=optstack[i]
 
         index=ptable[m]
@@ -130,15 +128,13 @@ def main():
         for idx,line in enumerate(addresses):
             x = int(line)
             adds.append(int(line))
-            print(x%256)
             if extractedbits(x,8,8) in optmap.keys():
                 optmap[extractedbits(x,8,8)].append(idx)
             else:
-                optmap[extractedbits(x,8,8)]=[]
-    for i in adds:
-        print(optmap.keys())
-        if len(optmap[extractedbits(x,8,8)])!=0:
-            optmap[extractedbits(x,8,8)].pop(0)
+                optmap[extractedbits(x,8,8)]=[idx]
+    for idx, i in enumerate(adds):
+        if len(optmap[extractedbits(i,8,8)])!=0:
+            optmap[extractedbits(i,8,8)].pop(0)
         pagenum=extractedbits(i,8,8)
         offset=extractedbits(i,8,0)
         framenumber=None
@@ -154,14 +150,12 @@ def main():
     
 
         if(not hit):
-            print("TLB MISS")
             if(ptable[pagenum]==-1):
                 with open("./Program_3/BACKING_STORE.bin", mode='rb') as file:
                     file.seek(pagenum*256)
                     b=file.read(256)
                     # lru(physicalMem,b,rows,ptable,pagenum,TLB,lrutail)
                     opt(physicalMem,b,rows,ptable,pagenum,TLB,optmap,optstack)
-                    print("PAGEFAULT")
                 totalfaults+=1
             framenumber=ptable[pagenum]
             TLB[tlbIndex][0]=pagenum
@@ -170,9 +164,8 @@ def main():
         index=(framenumber)
         hexa = physicalMem[index]
         n = findNode(lruhead,index)
-        print(index,n)
+
         if(n):
-            print(n.data)
             # if node at beginning of list, do nothing
             if(lruhead.data!=n.data):
                 # middle of list
@@ -208,7 +201,6 @@ def main():
                 nod.next=lruhead
                 lruhead.prev=nod
                 lruhead=nod
-        printLRU(lruhead)
         value=hexa[offset*2:(offset*2)+2]
         bits = bin(int(value, 16))[2:].zfill(8)
 
@@ -217,15 +209,15 @@ def main():
         else:
             signed_value = int(bits, 2)
 
-        print(i,pagenum,signed_value,index,hexa,'\n')
-    print("Number of Translated Addresses = ",len(adds))
-    print("Page Faults = ",totalfaults)
-    print("Page Fault Rate = ", totalfaults/len(adds))
-    print("TLB Hits = ", totalhits)
-    print("TLB Misses = ",(len(adds))-totalhits)
-    print("TLB Hit Rate = ", totalhits/len(adds))
-    print("size of physmem",PHYS_MEM_SIZE)
+        
+        print(f"{i}, {signed_value}, {index}, {hexa.upper()}")
 
+    print("Number of Translated Addresses =",len(adds))
+    print("Page Faults =",totalfaults)
+    print("Page Fault Rate =", totalfaults/len(adds))
+    print("TLB Hits =", totalhits)
+    print("TLB Misses =",(len(adds))-totalhits)
+    print("TLB Hit Rate =", totalhits/len(adds))
 
 
 
